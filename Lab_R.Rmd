@@ -1,0 +1,716 @@
+---
+title: "Laboratório R"
+author: "Vitor Hugo Teixeira de Lucca Filho"
+date: "12/09/2020"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Professor Vidal, para fazer os Laboratórios usei o modo Markdown do R que é muito similar a um notebook e me ajudou muito porque posso executar os códigos, gerar os gráficos, escrever os comentários e exportar como um arquivo de PDF, Word ou HTML.
+Ele pode ser criado clicando em File -> New File -> R Markdown.
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Laboratório 1
+
+### Visualização de Dados com ggplot2
+
+```{r library tideverse, include=FALSE}
+library(tidyverse)
+```
+
+```{r plot1, include=FALSE}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy))
+```
+```{r plot2, echo=FALSE}
+ggplot(data = mpg) + geom_point(mapping = aes(x = cyl, y = hwy))
+```
+
+```{r plot3, echo=FALSE}
+ggplot(data = mpg) +
+geom_point(mapping = aes(x = displ, y = hwy, color = class))
+```
+
+```{r plot4, echo=FALSE}
+ggplot(data = mpg) +
+geom_point(mapping = aes(x = displ, y = hwy, size = class))
+```
+
+
+```{r plot5, echo=FALSE}
+ggplot(data = mpg) +
+geom_point(mapping = aes(x = displ, y = hwy), color = "blue")
+```
+
+### Conclusões Laboratório 1
+
+Foi possível ter uma boa compreensão básica do pacote ggplot2 de algumas das visualizações que ele pode fornecer.
+
+## Laboratório 2
+
+### Visualização de Dados com ggplot2
+
+As 20 primeiras linhas do data frame flights! ? possivel rolar para a direita na versão html!
+```{r library knitr, echo=FALSE, message=FALSE, warning=FALSE}
+library(knitr)
+library(kableExtra)
+options(kableExtra.auto_format = FALSE)
+library(nycflights13)
+
+kbl(flights[1:20, ]) %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "100%", height = "300px")
+
+#kable(head(flights, n = 5), "simple")
+#kable(flights[1:5, 1:5], caption = "Algumas linhas e colunas do data frame flights!")
+#print(flights[1:5, ])
+
+```
+
+### Básico dplyr
+
+Usando Select para escolher colunas do df flights.
+
+```{r select, echo=FALSE, message=FALSE, warning=FALSE}
+
+mar8 <- filter(flights, month == 3, day == 8)
+dec25 <- filter(flights, month == 12, day == 25)
+
+
+kbl(select(flights[1:5, ], year, month, day)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "300px", height = "200px")
+
+```
+
+Movendo colunas para o começo com a função everything().
+
+```{r everythin, echo=FALSE, message=FALSE, warning=FALSE}  
+kbl(select(flights[1:20, ], time_hour, air_time, everything())) %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "100%", height = "300px")
+
+```
+
+### Adicionando Novas Variáveis
+
+df flights_sml
+
+```{r df flights_sml, echo=FALSE, message=FALSE, warning=FALSE}
+
+flights_sml <- select(flights,
+year:day,
+ends_with("delay"),
+distance,
+air_time
+)
+
+kbl(flights_sml[1:20, ]) %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "600px", height = "200px")
+
+```
+
+Novas variáveis para flights_sml
+
+```{r novas var, echo=FALSE, message=FALSE, warning=FALSE}
+m <- mutate(flights_sml,
+gain = dep_delay - arr_delay,
+speed = distance / air_time * 60
+)
+
+kbl(m[1:20, ]) %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "600px", height = "200px")
+```
+
+transmutate() flights
+
+```{r transmutate, echo=FALSE, message=FALSE, warning=FALSE}
+t <- transmute(flights,
+gain = dep_delay - arr_delay,
+hours = air_time / 60,
+gain_per_hour = gain / hours
+)
+
+kbl(t[1:20, ]) %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+### Funções de Criação Úteis
+
+```{r hist1, echo=FALSE, message=FALSE, warning=FALSE}
+
+flights <- flights %>% mutate(
+dep_time = hour * 60 + minute,
+arr_time = (arr_time %/% 100) * 60 + (arr_time %% 100),
+airtime2 = arr_time - dep_time,
+dep_sched = dep_time + dep_delay
+)
+
+ggplot(flights, aes(dep_sched)) + geom_histogram(binwidth = 60)
+
+```
+
+```{r hist2, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(flights, aes(dep_sched %% 60)) + geom_histogram(binwidth = 1)
+
+```
+
+```{r hist3, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(flights, aes(air_time - airtime2)) + geom_histogram()
+
+```
+
+### Resumos Agrupados
+
+A tabela abaixo mosta as primeiras 5 linhas de um agrupamento do atraso dos voos por ano, mês e dia.
+
+```{r resumos agrupados, echo=FALSE, message=FALSE, warning=FALSE}
+
+#summarise(flights, delay = mean(dep_delay, na.rm = TRUE))
+
+by_day <- group_by(flights, year, month, day)
+
+
+summarise(by_day, delay = mean(dep_delay, na.rm = TRUE))[1:20, ] %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+### Conclusões Laboratório 2
+
+O laboratório 2 foi mais desafiador do que o primeiro principalmente ao apresentar o resumo agrupado usando o comando summarise() comibinado com o group_by() e novas opções de gráficos dentro do pacote ggplot2. Uso bastante funções de agregação no SQL na minha atual função então sei que elas podem ser muito úteis na exploração dos dados com o R também.
+
+## Laboratório 3
+
+### Combinando múltiplas operações com o pipe
+
+Relação entre a distância e o atraso médio para cada local.
+
+```{r delay, echo=FALSE, message=FALSE, warning=FALSE}
+
+by_dest <- group_by(flights, dest)
+delay <- summarise(by_dest,
+count = n(),
+dist = mean(distance, na.rm = TRUE),
+delay = mean(arr_delay, na.rm = TRUE)
+)
+delay <- filter(delay, count > 20, dest != "HNL")
+
+delay[1:20, ] %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+Observação gráfica da relação.
+Os atrasos acontecem até uma certa distência e depois passam a diminuir.
+
+```{r smooth, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = delay, mapping = aes(x = dist, y = delay)) +
+geom_point(aes(size = count), alpha = 1/3) +
+geom_smooth(se = FALSE)
+
+```
+
+### Valores Faltantes
+
+Agregação sem remover NA.
+
+```{r com na, echo=FALSE, message=FALSE, warning=FALSE}
+
+flights %>%
+group_by(year, month, day) %>%
+summarise(mean = mean(dep_delay)) %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+Agregação removendo NA.
+
+```{r not_cancelled, echo=FALSE, message=FALSE, warning=FALSE}
+
+not_cancelled <- flights %>%
+filter(!is.na(dep_delay), !is.na(arr_delay))
+
+not_cancelled %>%
+group_by(year, month, day) %>%
+summarise(mean = mean(dep_delay)) %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+### Contagem
+
+Tabela do atraso médio por voo
+
+```{r contatem, echo=FALSE, message=FALSE, warning=FALSE}
+
+delays <- not_cancelled %>%
+group_by(tailnum) %>%
+summarise(
+delay = mean(arr_delay)
+)
+
+delays %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+Gráfico de linha do atraso médio por voo
+
+```{r agreg delay, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = delays, mapping = aes(x = delay)) +
+geom_freqpoly(binwidth = 10)
+
+```
+
+Gráfico de dispersão do atraso médio por voo
+
+```{r disp atraso, echo=FALSE, message=FALSE, warning=FALSE}
+
+delays <- not_cancelled %>%
+group_by(tailnum) %>%
+summarise( delay = mean(arr_delay, na.rm = TRUE), n = n())
+
+ggplot(data = delays, mapping = aes(x = n, y = delay)) +
+geom_point(alpha = 1/10)
+
+```
+
+Gráfico de dispersão do atraso médio por voo com filtro dos grupos que possuem menor
+número de observações (n>25)
+
+```{r disp atraso zoom, echo=FALSE, message=FALSE, warning=FALSE}
+
+delays %>%
+filter(n > 25) %>%
+ggplot(mapping = aes(x = n, y = delay)) +
+geom_point(alpha = 1/10)
+
+```
+
+### Funções Resumo
+
+O atraso geral médio (delay1) e o atraso positivo médio (delay2)
+
+```{r delay12, echo=FALSE, message=FALSE, warning=FALSE}
+
+not_cancelled %>%
+group_by(year, month, day) %>%
+summarise(
+avg_delay1 = mean(arr_delay),
+avg_delay2 = mean(arr_delay[arr_delay > 0])) %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+### Medidas de dispersão: sd(x), IQR(x), mad(x)
+
+Analise da distância para alguns destinos e a sua variação usando o desvio padrão.
+O destino com a maior variação de distâncias é o Egito.
+
+```{r disp, echo=FALSE, message=FALSE, warning=FALSE}
+
+not_cancelled %>%
+group_by(dest) %>%
+summarise(distance_sd = sd(distance)) %>%
+arrange(desc(distance_sd)) %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+### Contagem
+
+Contatem simples de quantos destinos cada companhia aéras têm.
+
+```{r contagem, echo=FALSE, message=FALSE, warning=FALSE}
+
+not_cancelled %>%
+group_by(dest) %>%
+summarise(carriers = n_distinct(carrier)) %>%
+arrange(desc(carriers)) %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+Contatem dos destinos.
+
+```{r contagem mais simples, echo=FALSE, message=FALSE, warning=FALSE}
+
+not_cancelled %>%
+count(dest) %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+### Contagens e proporções de valores lógicos: sum(x > 10), mean(y == 0)
+
+Quantos voos restam antes das 5 da manhã? (estes podem indicar atrasos de voos do dia anterior):
+
+```{r voos antes das cinco, echo=FALSE, message=FALSE, warning=FALSE}
+
+not_cancelled %>%
+group_by(year, month, day) %>%
+summarise(n_early = sum(dep_time < 500)) %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+Que proporção de voos estavam atrasados em mais de uma hora?
+
+```{r voos atrasados mais uma, echo=FALSE, message=FALSE, warning=FALSE}
+
+not_cancelled %>%
+group_by(year, month, day) %>%
+summarise(hour_prop = mean(arr_delay > 60)) %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+### Agrupamento por múltiplas variáveis
+
+Aplicando a função group_by por flight, year, month e day.
+
+```{r daily2, echo=FALSE, message=FALSE, warning=FALSE}
+
+daily <- group_by(flights, year, month, day)
+
+daily[1:20, ] %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "100%", height = "200px")
+
+```
+
+Agrupamento do número de voos por dia.
+
+```{r per day, echo=FALSE, message=FALSE, warning=FALSE}
+
+per_day <- summarise(daily, flights = n())
+
+per_day %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+Agrupamento do número de voos por mês.
+
+```{r per month, echo=FALSE, message=FALSE, warning=FALSE}
+
+per_month <- summarise(per_day, flights = sum(flights))
+
+per_month %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "200px", height = "200px")
+
+```
+
+Agrupamento do número de voos por ano.
+
+```{r per year, echo=FALSE, message=FALSE, warning=FALSE}
+
+per_year <- summarise(per_month, flights = sum(flights))
+
+per_year %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "200px", height = "50px")
+
+```
+
+### Mudanças Agrupadas e Filtros
+
+Aplicando a função filter() para os voos mais atrasados.
+```{r ranking dez, echo=FALSE, message=FALSE, warning=FALSE}
+
+filter(group_by(flights_sml, year, month, day), rank(desc(arr_delay)) < 10)[1:20, ] %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "500px", height = "200px")
+
+```
+
+Destinos mais populares (com mais de 365 voos)
+```{r dest mais pop, echo=FALSE, message=FALSE, warning=FALSE}
+
+popular_dests <- flights %>%
+group_by(dest) %>%
+filter(n() > 365)
+
+popular_dests[1:20, ] %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "500px", height = "200px")
+
+```
+
+Agrupamento da tabela anterior aplicando filtro de atrasos de chegadas positivos e adicionando uma coluna de proporção do atraso
+```{r prop_delay, echo=FALSE, message=FALSE, warning=FALSE}
+
+giga <- mutate(filter(popular_dests, arr_delay > 0), prop_delay = arr_delay / sum(arr_delay))
+
+select(giga[1:20, ], year:day, dest, arr_delay, prop_delay) %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "500px", height = "200px")
+
+```
+
+### Conclusões Laboratório 3
+
+
+
+## Laboratório 4
+
+Gráfico de carat vs price do data frame diamonds.
+```{r diamonds, echo=FALSE, message=FALSE, warning=FALSE}
+
+library(hexbin)
+ggplot(diamonds, aes(carat, price)) + geom_hex()
+ggsave("diamonds.pdf")
+write_csv(diamonds, "diamonds.csv")
+
+```
+
+### Conclusões Laboratório 4
+
+O foco desde laboratório foi usar o editor de scripts e configurar diretórios para a criação de projetos. Também pesquisei que sobre o uso da opção "Version Control" que usam o Github e o Git Bash e que parece ser muito útil para projetos em grupo. Ao final do laboratório foi feita a plotagem de um gráfico do data frame diamonds com a concentração (contagem) de diamantes por carat e price.
+
+## Laboratório 5
+
+### Análise Exploratória de Dados
+
+Amostra do data frame diamonds
+```{r df diamonds, echo=FALSE, message=FALSE, warning=FALSE}
+
+diamonds[1:20, ] %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "100%", height = "200px")
+
+```
+
+Gráfico de barras do data frame diamonds
+```{r bar diamonds, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = diamonds) + geom_bar(mapping = aes(x = cut))
+
+```
+
+Histograma com largura de barra 0.5 do data frame diamonds
+```{r hist diamonds, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = diamonds) +
+geom_histogram(mapping = aes(x = carat), binwidth = 0.5)
+
+```
+
+Histograma com largura de barra 0.1 do data frame diamonds
+```{r hist2 diamonds, echo=FALSE, message=FALSE, warning=FALSE}
+
+smaller <- diamonds %>%
+filter(carat < 3)
+
+ggplot(data = smaller, mapping = aes(x = carat)) +
+geom_histogram(binwidth = 0.1)
+
+```
+
+Plotagem da contagem com linhas para visualizar a sobreposição por cortes.
+```{r freqplot, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = smaller, mapping = aes(x = carat, colour = cut)) +
+geom_freqpoly(binwidth = 0.1)
+
+```
+
+### Valores Típicos
+
+Histograma com largura de barra 0.01 do data frame diamonds
+```{r hist3 diamonds, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = smaller, mapping = aes(x = carat)) +
+geom_histogram(binwidth = 0.01)
+
+```
+
+Histograma de eruptions com largura de barra 0.25 do data frame diamonds
+```{r hist4 diamonds, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = faithful, mapping = aes(x = eruptions)) +
+geom_histogram(binwidth = 0.25)
+
+```
+
+### Valores Incomuns
+
+Histograma de y com largura de barra 0.5 do data frame diamonds
+```{r hist5 diamonds, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(diamonds) +
+geom_histogram(mapping = aes(x = y), binwidth = 0.5)
+
+```
+
+Histograma de y com largura de barra 0.5 do data frame diamonds ampliado para count entre 0 e 50
+```{r hist6 diamonds, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(diamonds) +
+geom_histogram(mapping = aes(x = y), binwidth = 0.5) + coord_cartesian(ylim = c(0, 50))
+
+```
+
+A partir do gráfico anterior foi possível notar que existem três valores incomuns: 0, ~30 e ~60.
+Abaixo segue a tabela da dimensão dessas ocorrencias e os preços.
+```{r unsual, echo=FALSE, message=FALSE, warning=FALSE}
+
+unusual <- arrange(select(filter(diamonds, y < 3 | y > 20), price, x, y, z), y)
+
+unusual %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "400px", height = "200px")
+
+```
+
+### Valores Faltantes
+
+os valores incorretos foram substituidos por 'NA' e plotados em um gráfico de dispersão.
+Aparentemente o a relação entre x e y é uma correlação positiva que segue uma função linear.
+```{r plot diamonds2, echo=FALSE, message=FALSE, warning=FALSE}
+
+diamonds2 <- diamonds %>%
+mutate(y = ifelse(y < 3 | y > 20, NA, y))
+
+ggplot(data = diamonds2, mapping = aes(x = x, y = y)) +
+geom_point(na.rm = TRUE)
+
+```
+
+### Covariação
+
+```{r freqpoly2, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = diamonds, mapping = aes(x = price)) +
+geom_freqpoly(mapping = aes(colour = cut), binwidth = 500)
+
+```
+
+Em vez de exibir a contagem, vamos exibir density, que é a contagem padronizada de modo que a área sob cada polígono de frequência é um.
+```{r freqpoly3, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = diamonds, mapping = aes(x = price, y = ..density..)) +
+geom_freqpoly(mapping = aes(colour = cut), binwidth = 500)
+
+```
+
+### Boxplot
+
+```{r boxplot, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = diamonds, mapping = aes(x = cut, y = price)) +
+geom_boxplot()
+
+```
+
+```{r boxplot2, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = mpg) +
+geom_boxplot(mapping = aes(x = reorder(class, hwy, FUN = median), y
+= hwy))
+```
+Rotacionando o gráfico de boxplot
+```{r boxplot3, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = mpg) +
+geom_boxplot(mapping = aes(x = reorder(class, hwy, FUN = median), y
+= hwy)) +
+coord_flip()
+```
+
+### Duas variáveis categóricas
+
+```{r categoricas, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = diamonds) +
+geom_count(mapping = aes(x = cut, y = color))
+```
+
+### Duas variáveis contínuas
+
+O gráfico abaixo é muito similar ao gráfico hexagonal do laboratório 4.
+```{r twocategoricas, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = diamonds) +
+geom_point(mapping = aes(x = carat, y = price))
+```
+
+```{r boxplot4, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = smaller, mapping = aes(x = carat, y = price)) +
+geom_boxplot(mapping = aes(group = cut_width(carat, 0.5)))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
