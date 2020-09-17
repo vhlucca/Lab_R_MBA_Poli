@@ -1,6 +1,6 @@
 ---
 title: "Laboratório R"
-author: "Vitor Hugo Teixeira de Lucca Filho"
+author: "Gabriel Ramadan e Vitor Hugo Teixeira de Lucca Filho"
 date: "12/09/2020"
 output:
   html_document:
@@ -13,7 +13,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Professor Vidal, para fazer os Laboratórios usei o modo Markdown do R que é muito similar a um notebook e me ajudou muito porque posso executar os códigos, gerar os gráficos, escrever os comentários e exportar como um arquivo de PDF, Word ou HTML.
+Professor Vidal, para fazer os Laboratórios usamos o modo Markdown do R que é muito similar a um notebook. Ele nos ajudou muito porque podemos executar os códigos, gerar os gráficos, escrever os comentários e exportar como um arquivo de PDF, Word ou HTML.
 Ele pode ser criado clicando em File -> New File -> R Markdown.
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
@@ -672,33 +672,177 @@ ggplot(data = smaller, mapping = aes(x = carat, y = price)) +
 geom_boxplot(mapping = aes(group = cut_width(carat, 0.5)))
 ```
 
+```{r boxplot5, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = diamonds, mapping = aes(x = carat, y = price)) +
+geom_boxplot(mapping = aes(group = cut_number(carat, 20)))
+```
+
+### Padrões e modelos
+
+Carregando o pacote "modelr" para remover a relação muito forte entre preço e quilate para que possamos explorar as sutilezas que permanecem.
+Com o pacote, usamos a função lm (fitting linear models) para realizar regressão linear.
+
+```{r modelr, echo=FALSE, message=FALSE, warning=FALSE}
+
+library(modelr)
+mod <- lm(log(price) ~ log(carat), data = diamonds)
+print(mod)
+
+
+```
+
+```{r diamonds2, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+diamonds2 <- diamonds %>%
+add_residuals(mod) %>%
+mutate(resid = exp(resid))
+
+diamonds2[1:100, ] %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "700px", height = "200px")
+
+
+ggplot(data = diamonds2) +
+geom_point(mapping = aes(x = carat, y = resid))
+
+
+```
+
+```{r diamonds2 plot2, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = diamonds2) +
+geom_boxplot(mapping = aes(x = cut, y = resid))
+
+```
+
+### Conclusões Laboratório 5
 
 
 
+## Laboratório 6
 
+### Lendo Arquivos CSV
 
+heights.csv
+```{r heights, echo=FALSE, message=FALSE, warning=FALSE}
 
+heights <- read_csv(paste(getwd(),"/heights.csv", sep = ""))
 
+heights[1:20, ] %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "600px", height = "200px")
 
+```
 
+<br />  
 
+csv inline
+read_csv("a,b,c
+1,2,3
+4,5,6")
+```{r read_csv1, echo=FALSE, message=FALSE, warning=FALSE}
 
+read_csv("a,b,c
+1,2,3
+4,5,6") %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "600px", height = "100%")
 
+```
 
+<br />  
 
+A primeira linha de metadados
+A segunda linha de metadados
+```{r read_csv2, echo=FALSE, message=FALSE, warning=FALSE}
 
+read_csv("A primeira linha de metadados
+A segunda linha de metadados
+x,y,z
+1,2,3", skip = 2) %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "600px", height = "100%")
 
+```
 
+<br />  
+  
+"# Um comentário que eu quero pular"
+```{r read_csv3, echo=FALSE, message=FALSE, warning=FALSE}
 
+read_csv("# Um comentário que eu quero pular
+x,y,z
+1,2,3", comment = "#") %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "600px", height = "100%")
 
+```
 
+<br />  
 
+read_csv("1,2,3\n4,5,6", col_names = FALSE)
+```{r read_csv4, echo=FALSE, message=FALSE, warning=FALSE}
 
+read_csv("1,2,3\n4,5,6", col_names = FALSE) %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "600px", height = "100%")
 
+```
 
+<br />  
 
+read_csv("1,2,3\n4,5,6", col_names = c("x", "y", "z"))
+```{r read_csv5, echo=FALSE, message=FALSE, warning=FALSE}
 
+read_csv("1,2,3\n4,5,6", col_names = c("x", "y", "z")) %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "600px", height = "100%")
 
+```
+
+<br />  
+
+read_csv("a,b,c\n1,2,?", na = "?")
+```{r read_csv6, echo=FALSE, message=FALSE, warning=FALSE}
+
+read_csv("a,b,c\n1,2,?", na = "?") %>% kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover",  "responsive"), position = "center") %>%
+  scroll_box(width = "600px", height = "100%")
+
+```
+
+### Fatores
+
+```{r fatores, echo=FALSE, message=FALSE, warning=FALSE}
+
+library(forcats)
+x1 <- c("Dec", "Abr", "Jan", "Mar")
+x2 <- c("Dez", "Abr", "Jam", "Mar")
+
+sort(x1)
+
+month_levels <- c(
+"Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+"Jul", "Ago", "Set", "Out", "Nov", "Dez"
+)
+
+y1 <- factor(x1, levels = month_levels)
+y1
+sort(y1)
+
+y2 <- factor(x2, levels = month_levels)
+y2
+
+f1 <- factor(x1, levels = unique(x1))
+f1
+f2 <- x1 %>% factor() %>% fct_inorder()
+f2
+
+```
+
+### Conclusão Laboratório 6
 
 
 
