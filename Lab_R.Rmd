@@ -3,10 +3,11 @@ title: "Laboratório R"
 author: "Gabriel Ramadan e Vitor Hugo Teixeira de Lucca Filho"
 date: "12/09/2020"
 output:
-  html_document:
+  word_document: 
+  html_document: default
     df_print: paged
-  pdf_document: default
-  word_document: default
+  pdf_document:
+always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
@@ -481,7 +482,7 @@ select(giga[1:20, ], year:day, dest, arr_delay, prop_delay) %>% kbl() %>%
 
 ### Conclusões Laboratório 3
 
-
+Neste laboratório pudemos compreender como aplicar diferentes medidas com as funções resumo e group_by que são muito úteis em análises, e também aprendemos como usar o "pipe" para tornar o código mais fácil de ler.
 
 ## Laboratório 4
 
@@ -719,7 +720,7 @@ geom_boxplot(mapping = aes(x = cut, y = resid))
 
 ### Conclusões Laboratório 5
 
-
+Este laboratório talvez tenha sido um dos mais interessantes pois envolveu a plotagem de diferentes tipos de gráficos e algumas perguntas comuns a serem feitas para extrair insights dos dados.
 
 ## Laboratório 6
 
@@ -844,7 +845,7 @@ f2
 
 ### Conclusão Laboratório 6
 
-
+Este laboratório foi foi muito útil para aprendermos a ler arquivos csv e de banco de dados e que serão fontes das análises que faremos no futuro.
 
 
 
